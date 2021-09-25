@@ -20,6 +20,7 @@ public class FirstScreen implements Screen {
 	public List<Astroid> astroids;
 	private Player player;
 
+
 	public FirstScreen(SpriteBatch batch){
 		this.batch = batch;
 
