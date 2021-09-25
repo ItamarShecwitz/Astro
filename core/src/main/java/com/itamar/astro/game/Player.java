@@ -3,6 +3,7 @@ package com.itamar.astro.game;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
@@ -29,21 +30,35 @@ public class Player {
     private FirstScreen screen;
     private Vector2 speed;
     private List<Astroid> sortedAstroids;
+    private float currentX;
+    private float currentY;
+    private Animation<Texture> animationIdle;
+    private float animationTime;
+    private int frames;
+
     public Player(FirstScreen screen){
         x = 304;
         y = 164;
-        width = 32;
-        height = 32;
+
+        width = 24;
+        height = 29;
+
         texture = new Texture("player.png");
         this.screen = screen;
         speed = new Vector2();
         sortedAstroids = new ArrayList<>();
+        animationIdle = new Animation<Texture>(0.2f,
+                new Texture("beer_idle_1.png"),
+                new Texture("beer_idle_2.png"),
+                new Texture("beer_idle_3.png"),
+                new Texture("beer_idle_4.png"));
+        animationIdle.setPlayMode(Animation.PlayMode.LOOP);
     }
 
     ///////////////////// HERE
     public void update (float delta) {
         if (Gdx.input.isKeyJustPressed(Input.Keys.X)) {
-            isSelecting = true;
+            startSelectionMode();
         }
         if(screen.astroids.size() == 0) {
             isSelecting = false;
@@ -55,7 +70,13 @@ public class Player {
             isSelecting = false;
         }
         move(delta);
-        
+        animationTime += delta;
+    }
+
+    private void startSelectionMode() {
+        isSelecting = true;
+         currentX = x;
+         currentY = y;
     }
 
     public void move(float delta){
@@ -68,13 +89,14 @@ public class Player {
      * Updates to do while in selection mode
      */
     private void selectingMode() {
+
         sortAstroids();
 
-        if(screen.astroids.size() <= asteroidChosen){
-            asteroidChosen = screen.astroids.size()-1;
+        if(sortedAstroids.size() <= asteroidChosen){
+            asteroidChosen = sortedAstroids.size()-1;
         }
         if(Gdx.input.isKeyJustPressed(Input.Keys.RIGHT)) {
-            if(asteroidChosen != screen.astroids.size()-1){
+            if(asteroidChosen != sortedAstroids.size()-1){
                 asteroidChosen++;
             }else{
                 asteroidChosen = 0;
@@ -83,7 +105,7 @@ public class Player {
             if(asteroidChosen != 0){
                 asteroidChosen--;
             }else{
-                asteroidChosen = screen.astroids.size()-1;
+                asteroidChosen = sortedAstroids.size()-1;
             }
         }
 
@@ -98,8 +120,8 @@ public class Player {
             @Override
             public int compare(Astroid o1, Astroid o2) {
                 // Check angle of o1, o2
-                float o1Angle = MathUtils.atan2(o1.getPos().y-y, o1.getPos().x-x);
-                float o2Angle = MathUtils.atan2(o2.getPos().y-y, o2.getPos().x-x);
+                float o1Angle = MathUtils.atan2(o1.getPos().y-currentY, o1.getPos().x-currentX);
+                float o2Angle = MathUtils.atan2(o2.getPos().y-currentY, o2.getPos().x-currentX);
 
                 if(o1Angle<o2Angle){
                     return -1;
@@ -113,21 +135,24 @@ public class Player {
 
     private void goToAstroid() {
         System.out.println("Going to astroid!!!");
-        speed.set(screen.astroids.get(asteroidChosen).getPos());
+        speed.set(sortedAstroids.get(asteroidChosen).getPos());
         speed.sub(x, y);
         speed.scl(1);
     }
     //////////////////////// LOGIC: numbers/booleans/logic
 
-public boolean inSelectingMode(){return isSelecting;}
+    public boolean inSelectingMode(){return isSelecting;}
 
-    /////////////////////// RENDER: take the current state and draw it
+    /////////////////////// RENDER: take the current state and draw it24
 
     public void render(SpriteBatch batch) {
-        batch.draw(texture, x, y, width, height);
-        if(isSelecting){
-            Astroid chosen = screen.astroids.get(asteroidChosen);
 
+        Texture keyFrame = animationIdle.getKeyFrame(animationTime);
+        batch.draw(keyFrame, x, y, keyFrame.getWidth(), keyFrame.getHeight(), 0, 0, keyFrame.getWidth(), keyFrame.getHeight(),speed.x<0 ,false);
+
+
+        if(isSelecting){
+            Astroid chosen = sortedAstroids.get(asteroidChosen);
             batch.draw(texture, chosen.getPos().x, chosen.getPos().y, width, height);
         }
     }

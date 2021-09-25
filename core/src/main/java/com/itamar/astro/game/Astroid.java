@@ -13,6 +13,13 @@ public class Astroid {
     private final float speed = 100;
     private Vector2 vMover;
 
+    public Astroid(float x, float y){
+        pos = new Vector2(x ,y);
+        vMover = new Vector2();
+        width = 32;
+        height = 32;
+        texture = new Texture("astroid.png");
+    }
 
     public Astroid() {
         int direction = MathUtils.random(1, 4);
@@ -59,4 +66,5 @@ public class Astroid {
     public Vector2 getPos(){
         return pos;
     }
+
 }

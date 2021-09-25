@@ -4,8 +4,11 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.GL20;
+import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.math.Interpolation;
+import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 
 import java.util.ArrayList;
@@ -19,6 +22,7 @@ public class FirstScreen implements Screen {
 	Texture spaceTexture;
 	public List<Astroid> astroids;
 	private Player player;
+	private float selectionTime;
 
 
 	public FirstScreen(SpriteBatch batch){
@@ -32,6 +36,13 @@ public class FirstScreen implements Screen {
 		viewport = new FitViewport(640, 360);
 		player = new Player(this);
 		spaceTexture = new Texture("space.png");
+
+		float centerX = viewport.getWorldWidth() / 2f;
+		float centerY = viewport.getWorldHeight() / 2f;
+
+		for(int i = 0; i < 360; i += 36) {
+			astroids.add(new Astroid(centerX + MathUtils.sinDeg(i) * 100, centerY + MathUtils.cosDeg(i) * 100));
+		}
 	}
 
 	public void addAstroid(){
@@ -39,9 +50,23 @@ public class FirstScreen implements Screen {
 	}
 
 	public void update(float delta){
+
+		if(player.inSelectingMode()){
+			selectionTime += delta;
+			if(selectionTime > 1) {
+				selectionTime = 1;
+			}
+			delta /= 10;
+		} else {
+			selectionTime -= delta * 5;
+			if(selectionTime < 0) selectionTime = 0;
+		}
+
 		if (Gdx.input.isKeyJustPressed(Input.Keys.SPACE)){
 			addAstroid();
 		}
+
+		((OrthographicCamera)viewport.getCamera()).zoom = Interpolation.exp10Out.apply(1, 0.8f, selectionTime);
 
 		for(int i = 0; i < astroids.size(); i++) {
 			astroids.get(i).update(delta);
